@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ねこねこ おやつ騒動</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f7f0e4;color:#263238;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+button{font:inherit;border:0;cursor:pointer}
+.header{background:#244b6b;color:white;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:22px;letter-spacing:.04em}
+.badge{background:#416b8d;border-radius:18px;padding:7px 11px;font-size:12px;font-weight:800}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 28px}
+h1{font-size:26px;margin:4px 0 8px}
+.lead{color:#607487;margin:0 0 18px;line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{background:#fff;border:3px solid #d8d0c4;border-radius:18px;padding:10px;display:flex;align-items:center;gap:9px;min-height:94px;text-align:left;box-shadow:0 3px 0 #c8bdad}
+.card.selected{border-color:#ed8a28;box-shadow:0 3px 0 #b96315;background:#fff8ee}
+.catpic{width:62px;height:62px;flex:none;image-rendering:pixelated}
+.name{font-size:18px;font-weight:900}.desc{font-size:12px;color:#687987;margin-top:3px;line-height:1.35}
+.start{width:100%;margin-top:16px;background:#ef8b28;color:#fff;padding:16px;border-radius:18px;font-weight:900;font-size:21px;box-shadow:0 5px 0 #b96315}
+.start:active{transform:translateY(3px);box-shadow:0 2px 0 #b96315}
+#game{display:none}
+.topbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:10px}
+.stat{background:#fff;border-radius:12px;padding:9px 10px;font-weight:900;box-shadow:0 2px 0 #d2c6b6}
+.back{background:#e3d9ca;border-radius:12px;padding:9px 11px;font-weight:800}
+#field{position:relative;height:min(62vh,500px);min-height:390px;background:#ead9bd;border:6px solid #765b43;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 4px #c9af8d}
+#field:before{content:"";position:absolute;inset:0;background:
+radial-gradient(circle at 20% 20%,rgba(255,255,255,.3) 0 2px,transparent 3px),
+radial-gradient(circle at 70% 65%,rgba(90,60,30,.08) 0 2px,transparent 3px);
+background-size:48px 48px}
+.entity{position:absolute;width:56px;height:56px;display:flex;align-items:center;justify-content:center;z-index:3;transition:left .08s linear,top .08s linear}
+.entity svg{width:56px;height:56px;image-rendering:pixelated}
+.treat{position:absolute;width:34px;height:34px;background:#fff;border:3px solid #c87c31;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:21px;z-index:2;box-shadow:0 2px 0 #9b5d27}
+#message{margin:10px 0;background:#fff;border-radius:14px;padding:10px 12px;text-align:center;font-weight:800;min-height:44px;box-shadow:0 2px 0 #d2c6b6}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:310px;margin:10px auto 0}
+.ctrl{height:62px;border-radius:17px;background:#315d7f;color:white;font-size:28px;font-weight:900;box-shadow:0 4px 0 #1f4059}
+.ctrl:active{transform:translateY(3px);box-shadow:0 1px 0 #1f4059}
+.blank{visibility:hidden}
+.ball{display:block;margin:9px auto 0;background:#fff;border:2px solid #c7bcae;border-radius:13px;padding:9px 15px;font-weight:900}
+#result{display:none;text-align:center;background:white;border-radius:20px;padding:24px;margin-top:14px}
+.big{font-size:28px;font-weight:900}
+@media(min-width:600px){.cards{grid-template-columns:repeat(5,1fr)}.card{display:block}.catpic{display:block;margin:auto}.name{text-align:center;margin-top:5px}.desc{text-align:center}}
+</style>
+</head>
+<body>
+<header class="header"><div class="logo">🐾 ねこねこ おやつ騒動</div><div class="badge">まずは猫を選ぶ</div></header>
+
+<main class="wrap">
+<section id="select">
+<h1>どの猫で遊ぶ？</h1>
+<p class="lead">猫をタップして選んでください。<br>選んだ猫を<strong>画面下の方向ボタン</strong>で動かして、おやつを集めます。</p>
+<div class="cards" id="cards"></div>
+<button class="start" id="startBtn">この猫で遊ぶ！</button>
+</section>
+
+<section id="game">
+<div class="topbar">
+<div class="stat">🍘 <span id="score">0</span> / 10</div>
+<div class="stat">⏱️ <span id="time">45</span></div>
+<button class="back" id="quit">猫を選び直す</button>
+</div>
+<div id="field"></div>
+<div id="message">方向ボタンで猫を動かそう！</div>
+<div class="controls">
+<div class="blank"></div><button class="ctrl" data-d="up">▲</button><div class="blank"></div>
+<button class="ctrl" data-d="left">◀</button><button class="ctrl" data-d="down">▼</button><button class="ctrl" data-d="right">▶</button>
+</div>
+<button class="ball" id="ballBtn">⚽ ボールを投げる</button>
+<div id="result"><div class="big" id="resultText"></div><p>もう一度遊ぶなら「猫を選び直す」へ。</p></div>
+</section>
+</main>
+
+<script>
+const cats=[
+ {id:"faron",name:"ファーロン",desc:"やんちゃ・すばしっこい",body:"#667789",dark:"#394957",eye:"#9a6b35"},
+ {id:"ponkan",name:"ポンカン",desc:"しっかり者・ちょっと天然",body:"#fff",dark:"#bd682c",eye:"#6b7b3c"},
+ {id:"tsubuan",name:"つぶあん",desc:"黒猫・強い・でも優しい",body:"#202327",dark:"#111316",eye:"#d4a92e"},
+ {id:"izaura",name:"イザウラ",desc:"小柄・おてんば・俊敏",body:"#ead8bb",dark:"#604638",eye:"#62aee1"},
+ {id:"biwakun",name:"ビワくん",desc:"茶トラ・食いしん坊",body:"#e39a32",dark:"#a65d24",eye:"#6f5532"}
+];
+
+let selected=0, player, others=[], treats=[], score=0,time=45,running=false,timerId,aiId;
+const $=id=>document.getElementById(id);
+
+function catSVG(c){
+return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 23L15 7l14 10q3-1 6 0L49 7l3 16v23q-5 8-20 8T12 46Z" fill="${c.body}" stroke="#263238" stroke-width="2"/>
+<path d="M17 11l2 12 9-5M47 11l-2 12-9-5" fill="${c.dark}"/>
+<ellipse cx="24" cy="32" rx="5" ry="6" fill="${c.eye}"/><ellipse cx="40" cy="32" rx="5" ry="6" fill="${c.eye}"/>
+<circle cx="25" cy="33" r="2" fill="#111"/><circle cx="41" cy="33" r="2" fill="#111"/>
+<path d="M30 41q2-3 4 0M26 45q6 5 12 0" fill="none" stroke="#4a3030" stroke-width="2"/>
+</svg>`;
+}
+function cardHTML(c,i){return `<button class="card ${i===0?'selected':''}" data-i="${i}"><div class="catpic">${catSVG(c)}</div><div><div class="name">${c.name}</div><div class="desc">${c.desc}</div></div></button>`}
+$("cards").innerHTML=cats.map(cardHTML).join("");
+document.querySelectorAll(".card").forEach(b=>b.onclick=()=>{selected=+b.dataset.i;document.querySelectorAll(".card").forEach(x=>x.classList.remove("selected"));b.classList.add("selected")});
+
+function pos(el,x,y){el.style.left=x+"px";el.style.top=y+"px"}
+function rand(n){return Math.floor(Math.random()*n)}
+function start(){
+$("select").style.display="none";$("game").style.display="block";$("result").style.display="none";
+score=0;time=45;running=true;$("score").textContent=0;$("time").textContent=time;
+const f=$("field");f.innerHTML="";
+player={x:Math.floor(f.clientWidth/2),y:Math.floor(f.clientHeight/2),speed: selected===3?10:selected===0?8:selected===4?5:7};
+const p=document.createElement("div");p.className="entity";p.innerHTML=catSVG(cats[selected]);p.id="player";f.appendChild(p);pos(p,player.x,player.y);
+others=[];
+cats.forEach((c,i)=>{if(i===selected)return;let o={x:rand(Math.max(80,f.clientWidth-70)),y:rand(Math.max(100,f.clientHeight-70)),dx:Math.random()>.5?1:-1,dy:Math.random()>.5?1:-1,speed:i===4?1.2:i===0?2.3:1.6};let e=document.createElement("div");e.className="entity";e.innerHTML=catSVG(c);f.appendChild(e);o.el=e;o.cat=c;others.push(o);pos(e,o.x,o.y)});
+for(let i=0;i<10;i++){let t=document.createElement("div");t.className="treat";t.textContent="🍘";let x=20+rand(Math.max(20,f.clientWidth-65)),y=20+rand(Math.max(20,f.clientHeight-65));t.dataset.x=x;t.dataset.y=y;f.appendChild(t);treats.push(t)}
+$("message").textContent=`${cats[selected].name}、出発！ おやつを10個集めよう！`;
+clearInterval(timerId);clearInterval(aiId);timerId=setInterval(()=>{if(!running)return;time--; $("time").textContent=time;if(time<=0)finish(false)},1000);
+clearInterval(aiId);aiId=setInterval(aiMove,90);
+}
+function move(dx,dy){
+if(!running)return;
+const f=$("field");player.x=Math.max(4,Math.min(f.clientWidth-60,player.x+dx*player.speed));player.y=Math.max(4,Math.min(f.clientHeight-60,player.y+dy*player.speed));pos($("player"),player.x,player.y);checkTreat();
+}
+function checkTreat(){
+treats=treats.filter(t=>{let tx=+t.dataset.x,ty=+t.dataset.y;if(Math.abs(tx-player.x)<42&&Math.abs(ty-player.y)<42){t.remove();score++;$("score").textContent=score;$("message").textContent=score===10?"全部ゲット！":"🍘 おやつゲット！";if(score>=10)finish(true);return false}return true});
+}
+function aiMove(){
+if(!running)return;
+const f=$("field");
+others.forEach(o=>{if(Math.random()<.02){o.dx=Math.random()*2-1;o.dy=Math.random()*2-1}o.x+=o.dx*o.speed;o.y+=o.dy*o.speed;if(o.x<2||o.x>f.clientWidth-60)o.dx*=-1;if(o.y<2||o.y>f.clientHeight-60)o.dy*=-1;pos(o.el,o.x,o.y);
+let near=treats.find(t=>Math.abs(+t.dataset.x-o.x)<28&&Math.abs(+t.dataset.y-o.y)<28);
+if(near&&Math.random()<.03){near.remove();treats=treats.filter(t=>t!==near);$("message").textContent=`😼 ${o.cat.name}がおやつを横取り！`;}
+if(Math.abs(o.x-player.x)<38&&Math.abs(o.y-player.y)<38&&Math.random()<.015)$("message").textContent=`👀 ${o.cat.name}と目が合った…`;
+});
+}
+$("startBtn").onclick=start;
+document.querySelectorAll(".ctrl").forEach(b=>b.onclick=()=>{let d=b.dataset.d;move(d==="left"?-1:d==="right"?1:0,d==="up"?-1:d==="down"?1:0)});
+$("ballBtn").onclick=()=>{if(!running)return;$("message").textContent= selected===0||selected===3?"⚽ ボールだ！ 猫たちが追いかけた！":"⚽ ボールを投げた。でも誰も気にしていない…";others.forEach(o=>{o.x+=rand(41)-20;o.y+=rand(41)-20})};
+document.addEventListener("keydown",e=>{let k=e.key.toLowerCase();if(k==="arrowup"||k==="w"){e.preventDefault();move(0,-1)}if(k==="arrowdown"||k==="s"){e.preventDefault();move(0,1)}if(k==="arrowleft"||k==="a"){e.preventDefault();move(-1,0)}if(k==="arrowright"||k==="d"){e.preventDefault();move(1,0)}});
+$("quit").onclick=()=>{running=false;clearInterval(timerId);clearInterval(aiId);$("game").style.display="none";$("select").style.display="block"};
+function finish(win){running=false;clearInterval(timerId);clearInterval(aiId);$("result").style.display="block";$("resultText").textContent=win?"🎉 おやつ完全制覇！":"⏰ 時間切れ！ "+score+"個ゲット";}
+</script>
+</body>
+</html>
